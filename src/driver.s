@@ -110,6 +110,22 @@ Reset:
   sta PRG_SELECT_1
   lda #2
   sta PRG_SELECT_2
+  lda #0
+  sta CHR_SELECT_0
+  lda #1
+  sta CHR_SELECT_1
+  lda #2
+  sta CHR_SELECT_2
+  lda #3
+  sta CHR_SELECT_3
+  lda #4
+  sta CHR_SELECT_4
+  lda #5
+  sta CHR_SELECT_5
+  lda #6
+  sta CHR_SELECT_6
+  lda #7
+  sta CHR_SELECT_7
 
   ; disable the IRQ on the mapper side, but enable them on the NES side
   IRQ_DISABLE

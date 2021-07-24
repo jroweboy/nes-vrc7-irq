@@ -20,7 +20,7 @@ IRQHandler := irq_handler
 .segment "FIXED"
 
 .proc StartIRQ
-  lda #10
+  lda #$ff - 70 ; cycle counter counts up to ff, so reload with ff - 50
   sta IRQ_LATCH
   ; 7  bit  0
   ; ---------
@@ -169,12 +169,12 @@ IRQTerminalTemplateSize  := (IRQTerminalTemplateEnd - IRQTerminalTemplate)
 
 .proc PatchIRQHandler
   write_ptr = main_tmp_ptr
-  ldy #IRQHandlerExitOffset
+  ldy #IRQHandlerExitOffset + IRQTerminalTemplateSize-1
   ldx #IRQTerminalTemplateSize-1
   :
-    lda IRQHandlerTemplate, y
+    lda IRQHandlerNormalExit, x
     sta (write_ptr), y
-    iny
+    dey
     dex
     bpl :-
   rts

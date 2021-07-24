@@ -83,7 +83,8 @@ Exit:
   patch_ptr = main_tmp_ptr
   lda #$00
   sta main_tmp_ptr
-  lda #$60
+  ; add vrc7_current_offset - 1
+  lda #$5f
   clc
   adc vrc7_current_offset
   sta main_tmp_ptr+1
@@ -97,9 +98,8 @@ Exit:
   patch_ptr = main_tmp_ptr
   lda #$00
   sta main_tmp_ptr
-  sta jmp_addr_lo ; reset the IRQ to 
-  lda #$60
-  sta jmp_addr_hi
+  ; add vrc7_current_offset - 1
+  lda #$5f
   clc
   adc vrc7_current_offset
   sta main_tmp_ptr+1

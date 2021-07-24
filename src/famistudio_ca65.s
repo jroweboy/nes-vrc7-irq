@@ -1802,7 +1802,6 @@ famistudio_update_vrc7_channel_sound:
     ora #$30
     ora @pitch+1
     sta famistudio_chn_vrc7_prev_hi, y
-    ldx vrc7_current_offset
     sta write_queue, x
     inc vrc7_current_offset
     ; sta FAMISTUDIO_VRC7_REG_WRITE
@@ -2899,19 +2898,21 @@ famistudio_set_vrc7_instrument:
     iny
     @read_patch_loop:
         txa
-        ldx vrc7_current_offset
-        sta select_queue, x
-        ; stx FAMISTUDIO_VRC7_REG_SEL
-        ; jsr famistudio_vrc7_wait_reg_select
-        lda (@ptr),y
-        iny
+        pha
+            ldx vrc7_current_offset
+            sta select_queue, x
+            ; stx FAMISTUDIO_VRC7_REG_SEL
+            ; jsr famistudio_vrc7_wait_reg_select
+            lda (@ptr),y
+            iny
 
-        sta write_queue, x
+            sta write_queue, x
+            inc vrc7_current_offset
+        pla
         tax
         ; sta FAMISTUDIO_VRC7_REG_WRITE
         ; jsr famistudio_vrc7_wait_reg_write
         inx
-        inc vrc7_current_offset
         cpx #8
         bne @read_patch_loop
 
