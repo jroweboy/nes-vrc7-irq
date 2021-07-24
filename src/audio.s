@@ -69,6 +69,8 @@ FAMISTUDIO_DPCM_OFF           = __AUDIO_DMC_LOAD__
 
 .proc RunIRQ
   ldx vrc7_current_offset
+  ; if we don't have any data to write, the last handler will still just be 
+  ; the final handler
   beq Exit
     lda #$00
     sta jmp_addr_lo
@@ -104,7 +106,7 @@ Exit:
   adc vrc7_current_offset
   sta main_tmp_ptr+1
   jsr PatchIRQHandlerTerminal
-  
+  rts
   ;rts
 .endproc
 

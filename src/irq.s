@@ -20,7 +20,7 @@ IRQHandler := irq_handler
 .segment "FIXED"
 
 .proc StartIRQ
-  lda #$ff - 70 ; cycle counter counts up to ff, so reload with ff - 50
+  lda #$ff - 50 ; cycle counter counts up to ff, so reload with ff - 50
   sta IRQ_LATCH
   ; 7  bit  0
   ; ---------
@@ -104,6 +104,7 @@ CopyIRQCode:
   
 .endproc
 
+; 38 total cycles (including the register writes)
 IRQHandlerTemplate:
   pha
     ; write the registers for the audio.

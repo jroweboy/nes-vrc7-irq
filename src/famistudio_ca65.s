@@ -1813,7 +1813,7 @@ famistudio_update_vrc7_channel_sound:
     .if FAMISTUDIO_USE_VOLUME_TRACK
         ora famistudio_chn_volume_track+5, y
     .endif
-    tax
+    pha
 
     lda #0
     sta famistudio_chn_vrc7_trigger,y
@@ -1826,12 +1826,15 @@ famistudio_update_vrc7_channel_sound:
     sta select_queue, x
     ; sta FAMISTUDIO_VRC7_REG_SEL
     ; jsr famistudio_vrc7_wait_reg_select
+    pla
+    tax
     .if FAMISTUDIO_USE_VOLUME_TRACK
         lda famistudio_volume_table,x
         tax
     .endif
     lda famistudio_vrc7_invert_vol_table,x
     ora famistudio_chn_vrc7_patch,y
+    ldx vrc7_current_offset
     sta write_queue, x
     inc vrc7_current_offset
     ; sta FAMISTUDIO_VRC7_REG_WRITE
