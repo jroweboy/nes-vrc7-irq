@@ -54,7 +54,9 @@ oam: .res 256        ; sprite OAM data to be uploaded by DMA
     pha
       tya
       pha
-      ; whatever here
+      sta IRQ_ACKNOWLEDGE
+      ; cancel the IRQ till next frame
+      IRQ_DISABLE
       pla
       tay
     pla

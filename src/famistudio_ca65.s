@@ -1751,56 +1751,58 @@ famistudio_update_vrc7_channel_sound:
         jmp @compute_octave_loop
 
     @octave_done:
-
-    ; Write pitch (lo)
-    lda famistudio_vrc7_reg_table_lo,y
-    
-    ldx vrc7_current_offset
-    sta select_queue, x
-    ; sta FAMISTUDIO_VRC7_REG_SEL
-    ; jsr famistudio_vrc7_wait_reg_select
-
-    lda @pitch+0
-    sta write_queue, x
-    inc vrc7_current_offset
-    ; sta FAMISTUDIO_VRC7_REG_WRITE
-    ; jsr famistudio_vrc7_wait_reg_write
-
-    ; Un-trigger previous note if needed.
-    lda famistudio_chn_vrc7_prev_hi, y
-    and #$10 ; set trigger.
-    beq @write_hi_period
-    lda famistudio_chn_vrc7_trigger,y
-    beq @write_hi_period
-    @untrigger_prev_note:
-        lda famistudio_vrc7_reg_table_hi,y
+    txa
+    pha
+        ; Write pitch (lo)
+        lda famistudio_vrc7_reg_table_lo,y
         
         ldx vrc7_current_offset
         sta select_queue, x
         ; sta FAMISTUDIO_VRC7_REG_SEL
         ; jsr famistudio_vrc7_wait_reg_select
 
-        lda famistudio_chn_vrc7_prev_hi,y
-        and #$ef ; remove trigger
+        lda @pitch+0
         sta write_queue, x
         inc vrc7_current_offset
         ; sta FAMISTUDIO_VRC7_REG_WRITE
         ; jsr famistudio_vrc7_wait_reg_write
 
-    @write_hi_period:
+        ; Un-trigger previous note if needed.
+        lda famistudio_chn_vrc7_prev_hi, y
+        and #$10 ; set trigger.
+        beq @write_hi_period
+        lda famistudio_chn_vrc7_trigger,y
+        beq @write_hi_period
+        @untrigger_prev_note:
+            lda famistudio_vrc7_reg_table_hi,y
+            
+            ldx vrc7_current_offset
+            sta select_queue, x
+            ; sta FAMISTUDIO_VRC7_REG_SEL
+            ; jsr famistudio_vrc7_wait_reg_select
 
-    ; Write pitch (hi)
-    lda famistudio_vrc7_reg_table_hi,y
-    ldx vrc7_current_offset
-    sta select_queue, x
-    ; sta FAMISTUDIO_VRC7_REG_SEL
-    ; jsr famistudio_vrc7_wait_reg_select
+            lda famistudio_chn_vrc7_prev_hi,y
+            and #$ef ; remove trigger
+            sta write_queue, x
+            inc vrc7_current_offset
+            ; sta FAMISTUDIO_VRC7_REG_WRITE
+            ; jsr famistudio_vrc7_wait_reg_write
 
-    txa
+        @write_hi_period:
+
+        ; Write pitch (hi)
+        lda famistudio_vrc7_reg_table_hi,y
+        ldx vrc7_current_offset
+        sta select_queue, x
+        ; sta FAMISTUDIO_VRC7_REG_SEL
+        ; jsr famistudio_vrc7_wait_reg_select
+    pla
+    ; txa
     asl
     ora #$30
     ora @pitch+1
     sta famistudio_chn_vrc7_prev_hi, y
+    ldx vrc7_current_offset
     sta write_queue, x
     inc vrc7_current_offset
     ; sta FAMISTUDIO_VRC7_REG_WRITE
@@ -1821,16 +1823,20 @@ famistudio_update_vrc7_channel_sound:
 
     ; Write volume
     lda famistudio_vrc7_vol_table,y
-    sta FAMISTUDIO_VRC7_REG_SEL
-    jsr famistudio_vrc7_wait_reg_select
+    ldx vrc7_current_offset
+    sta select_queue, x
+    ; sta FAMISTUDIO_VRC7_REG_SEL
+    ; jsr famistudio_vrc7_wait_reg_select
     .if FAMISTUDIO_USE_VOLUME_TRACK
         lda famistudio_volume_table,x
         tax
     .endif
     lda famistudio_vrc7_invert_vol_table,x
     ora famistudio_chn_vrc7_patch,y
-    sta FAMISTUDIO_VRC7_REG_WRITE
-    jsr famistudio_vrc7_wait_reg_write
+    sta write_queue, x
+    inc vrc7_current_offset
+    ; sta FAMISTUDIO_VRC7_REG_WRITE
+    ; jsr famistudio_vrc7_wait_reg_write
 
     rts
 

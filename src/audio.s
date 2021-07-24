@@ -1,6 +1,16 @@
 
 .include "./common.s"
 
+.importzp main_tmp_ptr, jmp_addr_hi, jmp_addr_lo
+.import PatchIRQHandler, PatchIRQHandlerTerminal, StartIRQ
+.global music_queue, select_queue, write_queue
+
+.import __AUDIO_DMC_LOAD__
+
+.export InitMusic
+.export UpdateMusic
+
+
 .segment "ZEROPAGE"
 vrc7_current_offset:  .res 1
 
@@ -14,12 +24,7 @@ vrc7_current_offset:  .res 1
 music_queue:      .res 1
 audio_current:    .res 1
 
-.global music_queue, select_queue, write_queue
 
-.import __AUDIO_DMC_LOAD__
-
-.export InitMusic
-.export UpdateMusic
 
 ; FamiStudio config.
 FAMISTUDIO_CFG_EXTERNAL       = 1
@@ -55,8 +60,52 @@ FAMISTUDIO_DPCM_OFF           = __AUDIO_DMC_LOAD__
 
 .proc UpdateMusic
   jsr MusicUpdate
-  jmp famistudio_update
-  ; rts
+  jsr RestorePreviousHandler
+  jsr famistudio_update
+  jsr PatchTerminalHandler
+  jsr RunIRQ
+  rts
+.endproc
+
+.proc RunIRQ
+  ldx vrc7_current_offset
+  beq Exit
+    lda #$00
+    sta jmp_addr_lo
+    lda #$60
+    sta jmp_addr_hi
+    jsr StartIRQ
+Exit:
+  rts
+.endproc
+
+.proc RestorePreviousHandler
+  patch_ptr = main_tmp_ptr
+  lda #$00
+  sta main_tmp_ptr
+  lda #$60
+  clc
+  adc vrc7_current_offset
+  sta main_tmp_ptr+1
+  jsr PatchIRQHandler
+  lda #0
+  sta vrc7_current_offset
+  rts
+.endproc
+
+.proc PatchTerminalHandler
+  patch_ptr = main_tmp_ptr
+  lda #$00
+  sta main_tmp_ptr
+  sta jmp_addr_lo ; reset the IRQ to 
+  lda #$60
+  sta jmp_addr_hi
+  clc
+  adc vrc7_current_offset
+  sta main_tmp_ptr+1
+  jsr PatchIRQHandlerTerminal
+  
+  ;rts
 .endproc
 
 .proc MusicUpdate

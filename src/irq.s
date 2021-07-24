@@ -4,9 +4,10 @@
 
 .import GameIRQHandler
 .importzp main_tmp, main_tmp_ptr
-.global select_queue, write_queue
-.export PatchIRQHandler, PatchIRQHandlerTerminal,  IRQInit
+.global select_queue, write_queue, jmp_addr_lo, jmp_addr_hi
+.export PatchIRQHandler, PatchIRQHandlerTerminal, StartIRQ, IRQInit
 
+; treat the zeropage address for the IRQHandler as an absolute address
 IRQHandler := irq_handler
 .export IRQHandler : absolute
 
@@ -18,7 +19,20 @@ IRQHandler := irq_handler
 
 .segment "FIXED"
 
-; treat the zeropage address for the IRQHandler as an absolute address
+.proc StartIRQ
+  lda #10
+  sta IRQ_LATCH
+  ; 7  bit  0
+  ; ---------
+  ; .... .MEA
+  ;       |||
+  ;       ||+- IRQ Enable after acknowledgement (see IRQ Acknowledge)
+  ;       |+-- IRQ Enable (1 = enabled)
+  ;       +--- IRQ Mode (1 = cycle mode, 0 = scanline mode)
+  lda #%00000111
+  sta IRQ_CONTROL
+  rts
+.endproc
 
 .proc IRQInit
   tmp       = main_tmp
@@ -127,12 +141,12 @@ TemplateWrite:
     ; when writing the last handler we'll patch over the data here with IRQTerminalTemplate
     ; the comments indicate what will replace what
 IRQHandlerNormalExit:
-    inc jmp_addr_hi ; lda #>(GameIRQHandler) (2 bytes)
+    inc jmp_addr_hi ; lda #<(GameIRQHandler) (2 bytes)
   pla ; (last byte) sta jmp_addr_lo
   rti ; 2nd byte of sta jmp_addr_lo
   ; If we patch this IRQ handler to be the terminal one, then we need a little extra code here
   ; and since it doesn't affect the regular IRQ handler, we can just put it at the end of each of them
-  lda #<(GameIRQHandler)
+  lda #>(GameIRQHandler)
   sta jmp_addr_hi
   pla
   rti
@@ -147,7 +161,7 @@ TemplateWriteOffset     := (TemplateWriteLO - IRQHandlerTemplate)
 IRQHandlerExitOffset    := (IRQHandlerNormalExit - IRQHandlerTemplate)
 
 IRQTerminalTemplate:
-  lda #>(GameIRQHandler)
+  lda #<(GameIRQHandler)
   sta jmp_addr_lo
 IRQTerminalTemplateEnd:
 IRQTerminalTemplateSize  := (IRQTerminalTemplateEnd - IRQTerminalTemplate)
